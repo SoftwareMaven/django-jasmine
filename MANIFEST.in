@@ -1,4 +1,5 @@
 include LICENSE
 include README.rst
-recursive-include django_jasmine *
-recursive-include example *
+recursive-include django_jasmine/static *
+recursive-include django_jasmine *.html
+recursive-include django_jasmine_example/static * 

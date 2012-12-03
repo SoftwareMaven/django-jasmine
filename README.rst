@@ -9,46 +9,89 @@ development framework for testing your JavaScript code. It does not depend on
 any other JavaScript frameworks.  It does not require a DOM. And it has a
 clean, obvious syntax so that you can easily write tests.
 
-django-jasmine also integrates the
-`jasmine-jquery <https://github.com/velesin/jasmine-jquery>`_ plugin, that
-provides a set of custom matchers for jQuery framework and an API for handling
-HTML fixtures in your specs.
+django-jasmine version 1.0 includes jasmine v1.3.0.
 
-
-.. note::
-
-    Being overwhelmed by work, I won’t upgrade this package if nobody asks for
-    it. If you’re capable, please fork and pull request to help me, thanks in
-    advance !
 
 Installation
 ============
 
-1. pip install django-jasmine
-2. Add 'django_jasmine' to your settings.INSTALLED_APPS.
-3. Add settings.JASMINE_TEST_DIRECTORY, containing the path to your javascript
-   jasmine test files.  Files.json should be in this directory and all test
-   files should be in os.path.join(settings.JASMINE_TEST_DIRECTORY, 'spec') *
-4. Makes sure you have properly defined a STATIC_URL.
-5. Add all Javascript files (including jQuery, and any other libraries) to
-   files.json
-6. Add a urlconf to include('django_jasmine.urls').
-7. Visit the URL you've included in your urlconf to display Jasmine test
-   results.
+1. ``pip install django-jasmine``
 
-*See the example directory for more information.*
+2. Add ``django_jasmine`` to your project settings::
+
+    INSTALLED_APPS = (
+        # ...
+        'django_jasmine',
+    )
+
+3. Add the jasmine test runner to the end of your base urlconf::
+
+    from django.conf import settings
+    from django_jasmine.views import RunTests
+
+    patterns = urlpatterns('',
+        # Current urls
+    )
+
+    if settings.DEBUG:
+        patterns += urlpatterns('',
+            url('^js_tests/$', RunTests.as_view(), name='jasmine_tests'),
+        )
 
 
-Template
-========
+Usage
+=====
+
+django-jasmine looks throughout your static files locations for ``tests.json``
+configuration files.
+
+These files should contain references to spec files (the tests), other
+javascript (libraries and supporting files), and templates to include
+(such as javascript templates). For example::
+
+    {
+        "spec": [
+            "js/myapp/tests.js"
+        ],
+        "js": [
+            "//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js",
+            "js/lib/underscore.js",
+            "js/lib/backbone.js",
+            "js/base.js",
+            "js/myapp/models.js",
+            "js/myapp/views.js"
+        ],
+        "templates": [
+            "myapp/javascript/myapp.html"
+        ]
+    }
+
+If you want to use separate configuration files for each of your project's
+apps, you can put the common scripts in a project-level config. To ensure these
+common scripts are ordered first, set the ``priority`` key in your config file
+to ``true``. For example::
+
+    {
+        "priority": true,
+        "js": [
+            "//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js",
+            "js/lib/underscore.js",
+            "js/lib/backbone.js",
+            "js/base.js"
+        ]
+    }
+
+
+Test Template
+=============
 
 If you wish to modify the jasmine index template for any reason (e.g. add a new
 jasmine reporter), you can create a jasmine/index.html template as follow::
 
     {% extends "jasmine/base.html" %}
 
-    {% block jasmine_extra %}
-        {# If you want to extend the default jasmineEnv config #}
+    {% block extrajs %}
+        {# If you want to extend the default jasmine config or add other media #}
     {% endblock %}
 
     {% block jasmine %}
@@ -56,62 +99,4 @@ jasmine reporter), you can create a jasmine/index.html template as follow::
     {% endblock %}
 
 
-*Read templates/jasmine/base.html for the default config*
-
-Several versions of jasmine will be kept for retro-compatibility. You can
-override jasmine/base.html, and call for a specific version of jasmine (default
-to jasmine-latest, a symlink to the latest version)
-
-
-Fixtures
-========
-
-jasmine-jquery allowing to add fixtures, you can set them in
-os.path.join(settings.JASMINE_TEST_DIRECTORY, 'fixtures'). Then in your spec::
-
-    jasmine.getFixtures().fixturesPath = "/jasmine/fixtures/";
-    loadFixtures("template.html")
-
-
-Debug
-=====
-
-If you encounter some errors that isn't obvious to debug, you can add
-"django_jasmine" to your loggers.
-
-
-Integration with ./manage.py tests
-==================================
-
-To do so, I recommend using 
-`EnvJasmine <https://github.com/trevmex/EnvJasmine>`_, and use 
-`Fabric <http://docs.fabfile.org/en/1.3.3/index.html>`_ to run EnvJasmine after
-running manage.py tests
-
-
-Todo
-====
-
-1. Write django tests for this app
-2. Add Growl/notifyd notifications
-3. Rewrite the view to be class-based
-4. Add more settings for more flexibility
-
-Versions
-========
-
-The Pypi django-jasmine version 0.3.1 includes:
-
-* jasmine 1.1.0.rc1
-* jasmine-jquery 1.3.1
-
-since django-jasmine==0.3.1, it'll also insure that Django>=1.3 is installed,
-otherwise will install it as a dependency
-
-
-license
-=======
-
-Copyright (c) 2010 Movity, Inc
-Licensed new-style BSD, also containing Jasmine, which is licensed MIT. See
-LICENSE file for more information.
+See ``django_jasmine/templates/jasmine/base.html`` for the default config.

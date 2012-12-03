@@ -1,0 +1,11 @@
+{
+	"spec": [
+		"django_jasmine_example/spec/SpecHelper.js",
+		"django_jasmine_example/spec/PlayerSpec.js"
+	],
+	"js": [
+		"//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js",
+		"django_jasmine_example/src/Player.js",
+		"django_jasmine_example/src/Song.js"
+	]
+}
