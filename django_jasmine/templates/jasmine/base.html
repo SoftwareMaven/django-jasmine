@@ -21,34 +21,21 @@
   {{ spec_media.js }}
   {{ spec_media.coffee }}
 
-  <script type="text/javascript">
+  <script type="text/coffeescript">
   {% block jasmine %}
-    (function() {
-      var jasmineEnv = jasmine.getEnv();
-      jasmineEnv.updateInterval = 1000;
+  jasmineEnv = jasmine.getEnv()
+  jasmineEnv.updateInterval = 1000
 
-      var htmlReporter = new jasmine.HtmlReporter();
+  htmlReporter = new jasmine.HtmlReporter()
 
-      jasmineEnv.addReporter(htmlReporter);
+  jasmineEnv.addReporter htmlReporter
+  jasmineEnv.specFilter = (spec) -> htmlReporter.specFilter(spec)
 
-      jasmineEnv.specFilter = function(spec) {
-        return htmlReporter.specFilter(spec);
-      };
+  currentWindowOnload = window.onload
 
-      var currentWindowOnload = window.onload;
-
-      window.onload = function() {
-        if (currentWindowOnload) {
-          currentWindowOnload();
-        }
-        execJasmine();
-      };
-
-      function execJasmine() {
-        jasmineEnv.execute();
-      }
-
-    })();
+  setTimeout ->
+    jasmineEnv.execute()
+  , 1000
   {% endblock %}
   </script>
 </body>
