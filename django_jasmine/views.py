@@ -1,6 +1,6 @@
 import posixpath
 
-from django import forms
+from django.conf import settings
 from django.views.generic import TemplateView
 
 from django_jasmine import utils
@@ -10,7 +10,7 @@ class RunTests(TemplateView):
     """
     Run Jasmine tests.
 
-    To use an alternate version of Jasmine, set :attr:`jasmine_path` to the
+    To use an alternate version of Jasmine, set) :attr:`jasmine_path` to the
     correct relative base. Alternatively, you can specify the exact initial
     default media by overriding :meth:`get_default_js` and
     :meth:`get_default_css`.
@@ -21,6 +21,7 @@ class RunTests(TemplateView):
     """
     template_name = 'jasmine/index.html'
     jasmine_path = 'js/lib/jasmine-1.3.0'
+    coffee_path = 'js/lib/coffeescript-1.4.0'
     config_names = ('tests.json',)
     silent_config_fail = False
 
@@ -32,8 +33,10 @@ class RunTests(TemplateView):
         """
         css = self.get_default_css()
         js = self.get_default_js()
+        coffee = self.get_default_coffeescript()
 
         spec_js = []
+        spec_coffee = []
         templates = set()
         for config in utils.get_configs(names=self.config_names,
                                         silent=self.silent_config_fail):
@@ -41,15 +44,27 @@ class RunTests(TemplateView):
             for path in config.get('js', ()):
                 if path not in js:
                     js.append(path)
+            for path in config.get('coffee', ()):
+                if path not in coffee:
+                    coffee.append(path)
             for path in config.get('spec', ()):
-                if path not in spec_js:
-                    spec_js.append(path)
+                spec_type = path.split('.')[-1]
+                if path not in locals()[spec_type]:
+                    locals()['spec_{0}'.format(spec_type)].append(path)
 
         data = super(RunTests, self).get_context_data(*args, **kwargs)
-        data['jasmine_media'] = forms.Media(css=css, js=js)
-        data['spec_media'] = forms.Media(js=spec_js)
+        data['jasmine_media'] = utils.ExtendedMedia(css=css, js=js, coffee=coffee)
+        data['spec_media'] = utils.ExtendedMedia(js=spec_js, coffee=spec_coffee)
         data['include_templates'] = templates
         return data
+
+    def get_default_coffeescript(self):
+        """
+        Return a Media-formatted dictionary of relative or absolute URLs to coffee-script
+        files.
+        """
+        return [
+        ]
 
     def get_default_css(self):
         """
@@ -67,4 +82,5 @@ class RunTests(TemplateView):
         return [
             posixpath.join(self.jasmine_path, 'jasmine.js'),
             posixpath.join(self.jasmine_path, 'jasmine-html.js'),
+            posixpath.join(self.coffee_path, 'coffee-script.js'),
         ]
